@@ -2,6 +2,7 @@ package com.pavlmits.grpccource.grpc.greeting.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 
 import java.io.IOException;
 
@@ -14,6 +15,7 @@ public class GreetingServer {
                 .addService(new GreetServiceImpl())
                 .addService(new PrimeDecompositionService())
                 .addService(new CalculatorServiceImpl())
+                .addService(ProtoReflectionService.newInstance()) //reflection
                 .build();
 
         server.start();

@@ -2,8 +2,7 @@ package com.pavlmits.grpccource.grpc.greeting.client;
 
 import com.proto.dummy.DummyServiceGrpc;
 import com.proto.greet.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -21,10 +20,49 @@ public class GreetingClient {
 //        doServerStreamingCall(channel);
 
         //doClientStreamingCall(channel);
-        doBiDiStreamCall(channel);
+//        doBiDiStreamCall(channel);
+        doUnaryCallWithDeadLine(channel);
         System.out.println("Shutting down");
         channel.shutdown();
 
+    }
+
+    private void doUnaryCallWithDeadLine(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceBlockingStub blockingStub = GreetServiceGrpc.newBlockingStub(channel);
+
+        try {
+            System.out.println("Sending a request with a deadline of 3000 ms");
+            GreetWithDeadLineResponse response = blockingStub.withDeadline(Deadline.after(3000, TimeUnit.MILLISECONDS)).greetWithDeadLine(
+                    GreetWithDeadLineRequest.newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName("Pavlina")
+                                    .build())
+                            .build());
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline has been exceed it");
+            } else {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            System.out.println("Sending a request with a deadline of 100 ms");
+            GreetWithDeadLineResponse response = blockingStub.withDeadline(Deadline.after(100, TimeUnit.MILLISECONDS)).greetWithDeadLine(
+                    GreetWithDeadLineRequest.newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName("Pavlina")
+                                    .build())
+                            .build());
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline has been exceed it");
+            } else {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void doBiDiStreamCall(ManagedChannel channel) {
@@ -32,24 +70,23 @@ public class GreetingClient {
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        StreamObserver<GreetEveryoneRequest> requestObserver = asyncClient.greetEveryone(new
-                                                                                                 StreamObserver<GreetEveryoneResponse>() {
-                                                                                                     @Override
-                                                                                                     public void onNext(GreetEveryoneResponse value) {
-                                                                                                         System.out.println("Response from server:" + value.getResult());
-                                                                                                     }
+        StreamObserver<GreetEveryoneRequest> requestObserver = asyncClient.greetEveryone(new StreamObserver<GreetEveryoneResponse>() {
+            @Override
+            public void onNext(GreetEveryoneResponse value) {
+                System.out.println("Response from server:" + value.getResult());
+            }
 
-                                                                                                     @Override
-                                                                                                     public void onError(Throwable t) {
-                                                                                                         latch.countDown();
-                                                                                                     }
+            @Override
+            public void onError(Throwable t) {
+                latch.countDown();
+            }
 
-                                                                                                     @Override
-                                                                                                     public void onCompleted() {
-                                                                                                         System.out.println("Server is done sending data");
-                                                                                                         latch.countDown();
-                                                                                                     }
-                                                                                                 });
+            @Override
+            public void onCompleted() {
+                System.out.println("Server is done sending data");
+                latch.countDown();
+            }
+        });
         Arrays.asList("Pavlina", "John", "Aris").forEach(
                 name -> {
                     System.out.println("Sending " + name);
