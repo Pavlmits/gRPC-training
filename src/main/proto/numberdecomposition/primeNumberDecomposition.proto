@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package numberdecomposion;
+
+option java_package = "com.proto.numberdecomposition";
+option java_multiple_files = true;
+
+message PrimeNumberDecomposition{
+    int32 number = 1;
+}
+
+message PrimeNumberDecompositionRequest{
+    PrimeNumberDecomposition number = 1;
+}
+
+message PrimeNumberDecompositionResponse{
+    int32 result = 1;
+}
+
+service PrimeNumberDecompositionService{
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse);
+}
