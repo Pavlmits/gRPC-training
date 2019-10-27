@@ -6,6 +6,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -16,16 +17,58 @@ public class GreetingClient {
                 .usePlaintext()
                 .build();
 
-      /*  doUnaryCall(channel);
-        doServerStreamingCall(channel);*/
+//        doUnaryCall(channel);
+//        doServerStreamingCall(channel);
 
-        doClientStreamingCall(channel);
+        //doClientStreamingCall(channel);
+        doBiDiStreamCall(channel);
         System.out.println("Shutting down");
         channel.shutdown();
 
     }
 
-    private void doClientStreamingCall(ManagedChannel channel){
+    private void doBiDiStreamCall(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceStub asyncClient = GreetServiceGrpc.newStub(channel);
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<GreetEveryoneRequest> requestObserver = asyncClient.greetEveryone(new
+                                                                                                 StreamObserver<GreetEveryoneResponse>() {
+                                                                                                     @Override
+                                                                                                     public void onNext(GreetEveryoneResponse value) {
+                                                                                                         System.out.println("Response from server:" + value.getResult());
+                                                                                                     }
+
+                                                                                                     @Override
+                                                                                                     public void onError(Throwable t) {
+                                                                                                         latch.countDown();
+                                                                                                     }
+
+                                                                                                     @Override
+                                                                                                     public void onCompleted() {
+                                                                                                         System.out.println("Server is done sending data");
+                                                                                                         latch.countDown();
+                                                                                                     }
+                                                                                                 });
+        Arrays.asList("Pavlina", "John", "Aris").forEach(
+                name -> {
+                    System.out.println("Sending " + name);
+                    requestObserver.onNext(GreetEveryoneRequest.newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName(name))
+                            .build());
+                }
+        );
+
+        requestObserver.onCompleted();
+        try {
+            latch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void doClientStreamingCall(ManagedChannel channel) {
         //create a client (stub)
         GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
 
@@ -51,7 +94,7 @@ public class GreetingClient {
                 //the server is done sending us data
                 System.out.println("Server has completed sending us something");
                 latch.countDown();
-                //onCompleted will be called right after onNext(
+                //onCompleted will be called right after onNext()
             }
         });
 

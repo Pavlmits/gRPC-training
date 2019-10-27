@@ -10,11 +10,11 @@ message Greeting {
     string last_name = 2;
 }
 
-message GreetRequest{
+message GreetRequest {
     Greeting greeting = 1;
 }
 
-message GreetResponse{
+message GreetResponse {
     string result = 1;
 }
 
@@ -22,23 +22,35 @@ message GreetManyTimesRequest {
     Greeting greeting = 1;
 }
 
-message GreetManyTimesResponse{
+message GreetManyTimesResponse {
     string result = 1;
 }
 
-message LongGreetRequest{
+message LongGreetRequest {
     Greeting greeting = 1;
 }
 
-message LongGreetResponse{
+message LongGreetResponse {
     string result = 1;
 }
 
-service GreetService{
+message GreetEveryoneRequest {
+    Greeting greeting = 1;
+}
+
+message GreetEveryoneResponse {
+    string result = 1;
+}
+service GreetService {
     //Unary
-    rpc Greet(GreetRequest) returns (GreetResponse){};
+    rpc Greet (GreetRequest) returns (GreetResponse) {};
+
     //stream response
-    rpc GreetManyTimes(GreetManyTimesRequest) returns (stream GreetManyTimesResponse){};
+    rpc GreetManyTimes (GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {};
+
     //client streaming
-    rpc LongGreet(stream LongGreetRequest) returns (LongGreetResponse){};
+    rpc LongGreet (stream LongGreetRequest) returns (LongGreetResponse) {};
+
+    //BiDi streaming
+    rpc GreetEveryone (stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
 }

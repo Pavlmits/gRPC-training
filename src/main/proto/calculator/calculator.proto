@@ -18,6 +18,19 @@ message SumResponse{
     int32 result = 1;
 }
 
-service SumService{
+message AverageNumber{
+    int32 number = 1;
+}
+
+message AverageRequest{
+    AverageNumber number = 1;
+}
+
+message AverageResponse{
+    double result = 1;
+}
+
+service CalculatorService{
     rpc Sum(SumRequest) returns (SumResponse) {};
+    rpc AverageNumber(stream AverageRequest) returns (AverageResponse){};
 }

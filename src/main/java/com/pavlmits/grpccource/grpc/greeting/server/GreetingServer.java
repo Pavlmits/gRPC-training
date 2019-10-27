@@ -13,7 +13,7 @@ public class GreetingServer {
         Server server = ServerBuilder.forPort(50051)
                 .addService(new GreetServiceImpl())
                 .addService(new PrimeDecompositionService())
-                .addService(new SumServiceImpl())
+                .addService(new CalculatorServiceImpl())
                 .build();
 
         server.start();
